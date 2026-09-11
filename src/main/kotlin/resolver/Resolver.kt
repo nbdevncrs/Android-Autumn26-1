@@ -1,5 +1,6 @@
 package resolver
 
+import filter.PlayerFilter
 import model.Player
 import model.Position
 import model.Team
@@ -7,20 +8,28 @@ import model.Team
 class Resolver(
     private val players: List<Player>,
 ) : IResolver {
+    init {
+        players
+            .groupBy { it.team }
+            .forEach { (team, teamPlayers) -> team.attachPlayers(teamPlayers) }
+    }
+
     override fun getCountWithoutAgency(): Int =
-        players.count { it.agency == null }
+        players.count(PlayerFilter.WithoutAgency::matches)
 
     override fun getBestScorerDefender(): Pair<String, Int> {
+        val defenderFilter = PlayerFilter.ByPosition(Position.DEFENDER)
         val player = players
-            .filter { it.position == Position.DEFENDER }
+            .filter(defenderFilter::matches)
             .maxBy { it.goals }
 
         return player.name to player.goals
     }
 
     override fun getTheExpensiveGermanPlayerPosition(): String {
+        val germanFilter = PlayerFilter.ByNationality("Germany")
         val player = players
-            .filter { it.nationality == "Germany" }
+            .filter(germanFilter::matches)
             .maxBy { it.transferCost }
 
         return player.position.positionName
@@ -28,9 +37,9 @@ class Resolver(
 
     override fun getTheRudestTeam(): Team =
         players
-            .groupBy { it.team }
-            .maxBy { (_, teamPlayers) -> teamPlayers.map { it.redCards }.average() }
-            .key
+            .map { it.team }
+            .distinct()
+            .maxBy { it.averageRedCards }
 
     override fun getAverageTransferCostByPosition(): Map<Position, Double> =
         players

@@ -6,25 +6,68 @@ import model.Team
 
 object CsvParser {
     fun parse(lines: Sequence<String>): ParseResult {
-        val players = mutableListOf<Player>()
+        val records = mutableListOf<PlayerRecord>()
         var skippedCount = 0
 
         lines.drop(1).forEach { line ->
-            val player = parsePlayerOrNull(line)
+            val record = parseRecordOrNull(line)
 
-            if (player == null) {
+            if (record == null) {
                 skippedCount++
             } else {
-                players += player
+                records += record
             }
         }
 
-        return ParseResult(players, skippedCount)
+        return ParseResult(
+            players = buildPlayers(records),
+            skippedCount = skippedCount,
+        )
     }
 
     fun parse(lines: Iterable<String>): ParseResult = parse(lines.asSequence())
 
-    private fun parsePlayerOrNull(line: String): Player? {
+    fun parseRecords(lines: Sequence<String>): Sequence<PlayerRecord> =
+        lines.drop(1).mapNotNull(::parseRecordOrNull)
+
+    fun findFirstExpensiveExperiencedPlayerWithoutCards(lines: Sequence<String>): PlayerRecord? =
+        parseRecords(lines).firstOrNull { record ->
+            record.transferCost > 50_000_000 &&
+                record.participations >= 25 &&
+                record.yellowCards == 0 &&
+                record.redCards == 0
+        }
+
+    private fun buildPlayers(records: List<PlayerRecord>): List<Player> {
+        val teamsByNameAndCity = records
+            .map { it.teamName to it.city }
+            .distinct()
+            .associateWith { (teamName, city) -> Team(teamName, city) }
+
+        val players = records.map { record ->
+            Player(
+                name = record.name,
+                team = teamsByNameAndCity.getValue(record.teamName to record.city),
+                position = record.position,
+                nationality = record.nationality,
+                agency = record.agency,
+                transferCost = record.transferCost,
+                participations = record.participations,
+                goals = record.goals,
+                assists = record.assists,
+                yellowCards = record.yellowCards,
+                redCards = record.redCards,
+            )
+        }
+
+        players
+            .groupBy { it.team }
+            .forEach { (team, teamPlayers) -> team.attachPlayers(teamPlayers) }
+
+        return players
+    }
+
+    private fun parseRecordOrNull(line: String): PlayerRecord? {
         val columns = line.split(';').map { it.trim() }
         if (columns.size != COLUMN_COUNT) return null
 
@@ -43,9 +86,10 @@ object CsvParser {
         val yellowCards = columns[10].toIntOrNull() ?: return null
         val redCards = columns[11].toIntOrNull() ?: return null
 
-        return Player(
+        return PlayerRecord(
             name = name,
-            team = Team(teamName, city),
+            teamName = teamName,
+            city = city,
             position = position,
             nationality = nationality,
             agency = agency,

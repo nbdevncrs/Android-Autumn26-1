@@ -28,6 +28,8 @@ class ResolverTest {
 
     @Test
     fun `returns average transfer cost by position sorted descending`() {
+        val averageCostByPosition = resolver.getAverageTransferCostByPosition()
+
         assertEquals(
             mapOf(
                 Position.MIDFIELD to 300.0,
@@ -35,7 +37,11 @@ class ResolverTest {
                 Position.FORWARD to 200.0,
                 Position.DEFENDER to 150.0,
             ),
-            resolver.getAverageTransferCostByPosition(),
+            averageCostByPosition,
+        )
+        assertEquals(
+            listOf(Position.MIDFIELD, Position.GOALKEEPER, Position.FORWARD, Position.DEFENDER),
+            averageCostByPosition.keys.toList(),
         )
     }
 
