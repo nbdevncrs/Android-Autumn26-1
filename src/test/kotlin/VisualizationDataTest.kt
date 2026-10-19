@@ -1,7 +1,6 @@
 import model.Player
 import model.Position
 import model.Team
-import resolver.Resolver
 import visualization.calculateCountryShares
 import visualization.calculateTopTeamCostShares
 import kotlin.test.Test
@@ -22,8 +21,6 @@ class VisualizationDataTest {
 
     @Test
     fun `top team cost shares are calculated with cumulative share`() {
-        Resolver(players)
-
         val teamShares = calculateTopTeamCostShares(players, limit = 2)
 
         assertEquals(listOf(teamB, teamA), teamShares.map { it.team })

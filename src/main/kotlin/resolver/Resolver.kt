@@ -8,12 +8,6 @@ import model.Team
 class Resolver(
     private val players: List<Player>,
 ) : IResolver {
-    init {
-        players
-            .groupBy { it.team }
-            .forEach { (team, teamPlayers) -> team.attachPlayers(teamPlayers) }
-    }
-
     override fun getCountWithoutAgency(): Int =
         players.count(PlayerFilter.WithoutAgency::matches)
 
@@ -37,9 +31,15 @@ class Resolver(
 
     override fun getTheRudestTeam(): Team =
         players
-            .map { it.team }
-            .distinct()
-            .maxBy { it.averageRedCards }
+            .groupBy { it.team }
+            .maxBy { (_, teamPlayers) -> teamPlayers.map { it.redCards }.average() }
+            .key
+
+    override fun getAverageRedCards(team: Team): Double =
+        players.filter { it.team == team }.map { it.redCards }.average()
+
+    override fun getTotalTransferCost(team: Team): Long =
+        players.filter { it.team == team }.sumOf { it.transferCost }
 
     override fun getAverageTransferCostByPosition(): Map<Position, Double> =
         players

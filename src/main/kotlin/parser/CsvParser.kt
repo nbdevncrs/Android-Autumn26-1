@@ -44,7 +44,7 @@ object CsvParser {
             .distinct()
             .associateWith { (teamName, city) -> Team(teamName, city) }
 
-        val players = records.map { record ->
+        return records.map { record ->
             Player(
                 name = record.name,
                 team = teamsByNameAndCity.getValue(record.teamName to record.city),
@@ -60,11 +60,6 @@ object CsvParser {
             )
         }
 
-        players
-            .groupBy { it.team }
-            .forEach { (team, teamPlayers) -> team.attachPlayers(teamPlayers) }
-
-        return players
     }
 
     private fun parseRecordOrNull(line: String): PlayerRecord? {

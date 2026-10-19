@@ -16,15 +16,16 @@ fun calculateTopTeamCostShares(players: List<Player>, limit: Int = 10): List<Tea
     var cumulativeCost = 0L
 
     return players
-        .map { it.team }
-        .distinct()
-        .sortedWith(compareByDescending<Team> { it.totalTransferCost }.thenBy { it.name }.thenBy { it.city })
+        .groupBy { it.team }
+        .mapValues { (_, teamPlayers) -> teamPlayers.sumOf { it.transferCost } }
+        .toList()
+        .sortedWith(compareByDescending<Pair<Team, Long>> { it.second }.thenBy { it.first.name }.thenBy { it.first.city })
         .take(limit)
-        .map { team ->
-            cumulativeCost += team.totalTransferCost
+        .map { (team, teamCost) ->
+            cumulativeCost += teamCost
             TeamCostShare(
                 team = team,
-                totalCost = team.totalTransferCost,
+                totalCost = teamCost,
                 cumulativeShare = cumulativeCost.toDouble() / totalCost,
             )
         }

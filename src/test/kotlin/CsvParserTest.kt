@@ -91,7 +91,7 @@ class CsvParserTest {
     }
 
     @Test
-    fun `team stores parsed players and lazy metrics`() {
+    fun `players share team data with name and city`() {
         val result = CsvParser.parse(
             listOf(
                 HEADER,
@@ -106,9 +106,8 @@ class CsvParserTest {
         val team = firstPlayer.team
 
         assertSame(team, secondPlayer.team)
-        assertEquals(listOf(firstPlayer, secondPlayer), team.players)
-        assertEquals(3_000_000, team.totalTransferCost)
-        assertEquals(1.0, team.averageRedCards)
+        assertEquals("Nevada whales", team.name)
+        assertEquals("South Carolina", team.city)
     }
 
     @Test
@@ -163,9 +162,6 @@ class CsvParserTest {
 
         assertEquals(250, result.players.size)
         assertEquals(0, result.skippedCount)
-        result.players.forEach { player ->
-            assertTrue(player in player.team.players)
-        }
     }
 
     @Test

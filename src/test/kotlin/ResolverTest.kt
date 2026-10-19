@@ -27,6 +27,18 @@ class ResolverTest {
     }
 
     @Test
+    fun `team metrics use only players of this resolver`() {
+        assertEquals(1.0, resolver.getAverageRedCards(teamA))
+        assertEquals(300L, resolver.getTotalTransferCost(teamA))
+
+        val subsetResolver = Resolver(listOf(players.first()))
+        assertEquals(0.0, subsetResolver.getAverageRedCards(teamA))
+        assertEquals(100L, subsetResolver.getTotalTransferCost(teamA))
+        assertEquals(1.0, resolver.getAverageRedCards(teamA))
+        assertEquals(300L, resolver.getTotalTransferCost(teamA))
+    }
+
+    @Test
     fun `returns average transfer cost by position sorted descending`() {
         val averageCostByPosition = resolver.getAverageTransferCostByPosition()
 
